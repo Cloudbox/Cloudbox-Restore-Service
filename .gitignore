@@ -37,3 +37,6 @@ build/
 dist/
 *.manifest
 *.spec
+
+# uploads
+/uploads/
