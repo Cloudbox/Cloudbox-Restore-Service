@@ -1,0 +1,17 @@
+# /etc/systemd/system/cloudbox_restore_service.service
+
+[Unit]
+Description=Cloudbox Restore Service
+After=network-online.target
+
+[Service]
+User=root
+Group=root
+Type=simple
+WorkingDirectory=/opt/cloudbox_restore_service/
+ExecStart=/usr/bin/python3 /opt/cloudbox_restore_service/server.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
