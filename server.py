@@ -4,7 +4,7 @@ import os
 import sys
 from logging.handlers import RotatingFileHandler
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from gevent.pywsgi import WSGIServer
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
@@ -68,6 +68,46 @@ def index():
     return json_response('Hello?!', True)
 
 
+@app.route('/load/<load_hash>/<load_filename>', methods=['GET'])
+def load(load_hash, load_filename):
+    # validate supplied parameters
+    if not load_hash or not len(load_hash):
+        log.error("Invalid hash provided in load request from %s", request.environ.get('REMOTE_ADDR'))
+        return json_response('Invalid hash provided', True)
+    if not load_filename or not len(load_filename):
+        log.error("Invalid filename in load request from %s", request.environ.get('REMOTE_ADDR'))
+        return json_response('Invalid filename provided', True)
+
+    # validate filename was an allowed filename
+    secured_filename = os.path.basename(secure_filename(load_filename)).lower()
+    if secured_filename not in cfg.config['uploads']['allowed_files']:
+        log.error("Unspported filename in load request from %s for %s", request.environ.get('REMOTE_ADDR'),
+                  secured_filename)
+        return json_response('Unsupported filename provided', True)
+
+    # set secured variables
+    secured_load_hash = secure_filename(load_hash)
+    secured_load_directory = os.path.join(cfg.config['uploads']['upload_folder'], secured_load_hash)
+    secured_load_filepath = os.path.join(secured_load_directory, secured_filename)
+
+    try:
+        # does file exist?
+        if not os.path.exists(secured_load_filepath):
+            log.error("Load request from %s for %r by %r did not exist at %r", request.environ.get('REMOTE_ADDR'),
+                      secured_filename, secured_load_hash, secured_load_filepath)
+            return json_response('%s was missing' % secured_filename, True)
+
+        log.info("Load request from %s for %r by %r", request.environ.get('REMOTE_ADDR'), secured_filename,
+                 secured_load_hash)
+        return send_from_directory(secured_load_directory, secured_filename)
+
+    except Exception:
+        log.exception("Unexpected exception with load request from %s for %r with filename %r: ",
+                      request.environ.get('REMOTE_ADDR'), secured_load_hash, secured_filename)
+
+    return json_response('Failed unexpectedly while loading %s' % secured_filename, True)
+
+
 @app.route('/save/<save_hash>/<save_filename>', methods=['POST'])
 def save(save_hash, save_filename):
     # validate supplied parameters
@@ -92,7 +132,8 @@ def save(save_hash, save_filename):
     # retrieve file
     try:
         if 'file' not in request.files:
-            log.error("Save request from %s had no file attached...", request.environ.get('REMOTE_ADDR'))
+            log.error("Save request from %s for %s had no file attached...", request.environ.get('REMOTE_ADDR'),
+                      secured_save_hash)
             return json_response('No file was attached to the save request', True)
 
         # there is a file, lets read it
