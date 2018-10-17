@@ -12,8 +12,7 @@ class Config:
     base_config = OrderedDict({
         # CORE
         'core': {
-            'debug': True,
-            'database_path': os.path.join(os.path.dirname(sys.argv[0]), 'vault.db')
+            'debug': True
         },
         # SERVER
         'server': {

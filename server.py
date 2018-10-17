@@ -6,7 +6,6 @@ from logging.handlers import RotatingFileHandler
 
 from flask import Flask, jsonify, request
 from gevent.pywsgi import WSGIServer
-from walrus.tusks.rlite import WalrusLite
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 
@@ -48,9 +47,6 @@ log = rootLogger.getChild("cloudbox_restore_service")
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = cfg.config['uploads']['max_file_size_kb'] * 1024
 
-# Walrus
-db = WalrusLite(cfg.config['core']['database_path'])
-
 
 ############################################################
 # FUNCTIONS
@@ -72,32 +68,32 @@ def index():
     return json_response('Hello?!', True)
 
 
-@app.route('/<store_hash>/<store_filename>', methods=['POST'])
-def store(store_hash, store_filename):
+@app.route('/save/<save_hash>/<save_filename>', methods=['POST'])
+def save(save_hash, save_filename):
     # validate supplied parameters
-    if not store_hash or not len(store_hash):
-        log.error("Invalid hash provided in store request from %s", request.environ.get('REMOTE_ADDR'))
+    if not save_hash or not len(save_hash):
+        log.error("Invalid hash provided in save request from %s", request.environ.get('REMOTE_ADDR'))
         return json_response('Invalid hash provided', True)
-    if not store_filename or not len(store_filename):
-        log.error("Invalid filename in store request from %s", request.environ.get('REMOTE_ADDR'))
+    if not save_filename or not len(save_filename):
+        log.error("Invalid filename in save request from %s", request.environ.get('REMOTE_ADDR'))
         return json_response('Invalid filename provided', True)
 
     # validate filename was an allowed filename
-    secured_filename = os.path.basename(secure_filename(store_filename)).lower()
+    secured_filename = os.path.basename(secure_filename(save_filename)).lower()
     if secured_filename not in cfg.config['uploads']['allowed_files']:
-        log.error("Unspported filename in store request from %s for %s", request.environ.get('REMOTE_ADDR'),
+        log.error("Unspported filename in save request from %s for %s", request.environ.get('REMOTE_ADDR'),
                   secured_filename)
         return json_response('Unsupported filename provided', True)
 
     # set secured variables
-    secured_store_hash = secure_filename(store_hash)
-    secured_store_filepath = os.path.join(cfg.config['uploads']['upload_folder'], secured_store_hash, secured_filename)
+    secured_save_hash = secure_filename(save_hash)
+    secured_save_filepath = os.path.join(cfg.config['uploads']['upload_folder'], secured_save_hash, secured_filename)
 
     # retrieve file
     try:
         if 'file' not in request.files:
-            log.error("Request from %s had no file attached...", request.environ.get('REMOTE_ADDR'))
-            return json_response('No file was attached to the request', True)
+            log.error("Save request from %s had no file attached...", request.environ.get('REMOTE_ADDR'))
+            return json_response('No file was attached to the save request', True)
 
         # there is a file, lets read it
         file = request.files['file']
@@ -105,33 +101,33 @@ def store(store_hash, store_filename):
         if file.filename == '':
             return json_response('Invalid file was attached', True)
 
-        # store
-        log.info("Storing %r to %r for %s", secured_filename, secured_store_filepath,
-                 request.environ.get('REMOTE_ADDR'))
+        log.info("Save request from %s for %r to %r", request.environ.get('REMOTE_ADDR'), secured_filename,
+                 secured_save_filepath)
 
         # create directories
         try:
-            os.makedirs(os.path.dirname(secured_store_filepath))
+            os.makedirs(os.path.dirname(secured_save_filepath))
         except FileExistsError:
             pass
         except Exception:
-            log.exception("Exception with request from %s while creating upload folder %r",
-                          request.environ.get('REMOTE_ADDR'), os.path.dirname(secured_store_filepath))
-            return json_response('Failed unexpectedly while storing %s' % secured_filename, True)
+            log.exception("Exception with save request from %s while creating upload folder %r",
+                          request.environ.get('REMOTE_ADDR'), os.path.dirname(secured_save_filepath))
+            return json_response('Failed unexpectedly while saving %s' % secured_filename, True)
 
         # save file
-        file.save(secured_store_filepath)
-        return json_response('Successfully stored %s' % secured_filename)
+        file.save(secured_save_filepath)
+        return json_response('Successfully saved %s' % secured_filename)
 
     except RequestEntityTooLarge:
-        log.exception("Exception with request from %s while storing upload for %r with filename %r: ",
-                      request.environ.get('REMOTE_ADDR'), secured_store_hash, secured_filename)
-        return json_response('File was too large to be stored', True)
+        log.error(
+            "Exception with save request from %s for %r with filename %r, the file was too large...",
+            request.environ.get('REMOTE_ADDR'), secured_save_hash, secured_filename)
+        return json_response('File was too large to be saved', True)
     except Exception:
-        log.exception("Exception with request from %s while storing upload for %r with filename %r: ",
-                      request.environ.get('REMOTE_ADDR'), secured_store_hash, secured_filename)
+        log.exception("Unexpected exception with save request from %s for %r with filename %r: ",
+                      request.environ.get('REMOTE_ADDR'), secured_save_hash, secured_filename)
 
-    return json_response('Failed unexpectedly while storing %s' % secured_filename, True)
+    return json_response('Failed unexpectedly while saving %s' % secured_filename, True)
 
 
 ############################################################
