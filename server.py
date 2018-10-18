@@ -81,7 +81,7 @@ def load(load_hash, load_filename):
     # validate filename was an allowed filename
     secured_filename = os.path.basename(secure_filename(load_filename)).lower()
     if secured_filename not in cfg.config['uploads']['allowed_files']:
-        log.error("Unspported filename in load request from %s for %s", request.environ.get('REMOTE_ADDR'),
+        log.error("Unsupported filename in load request from %s for %r", request.environ.get('REMOTE_ADDR'),
                   secured_filename)
         return json_response('Unsupported filename provided', True)
 
@@ -93,16 +93,16 @@ def load(load_hash, load_filename):
     try:
         # does file exist?
         if not os.path.exists(secured_load_filepath):
-            log.error("Load request from %s for %r by %r did not exist at %r", request.environ.get('REMOTE_ADDR'),
+            log.error("Load request from %s for %r by %s did not exist at %r", request.environ.get('REMOTE_ADDR'),
                       secured_filename, secured_load_hash, secured_load_filepath)
             return json_response('%s was missing' % secured_filename, True)
 
-        log.info("Load request from %s for %r by %r", request.environ.get('REMOTE_ADDR'), secured_filename,
+        log.info("Load request from %s for %r by %s", request.environ.get('REMOTE_ADDR'), secured_filename,
                  secured_load_hash)
         return send_from_directory(secured_load_directory, secured_filename)
 
     except Exception:
-        log.exception("Unexpected exception with load request from %s for %r with filename %r: ",
+        log.exception("Unexpected exception with load request from %s for %s with filename %r: ",
                       request.environ.get('REMOTE_ADDR'), secured_load_hash, secured_filename)
 
     return json_response('Failed unexpectedly while loading %s' % secured_filename, True)
@@ -121,7 +121,7 @@ def save(save_hash, save_filename):
     # validate filename was an allowed filename
     secured_filename = os.path.basename(secure_filename(save_filename)).lower()
     if secured_filename not in cfg.config['uploads']['allowed_files']:
-        log.error("Unspported filename in save request from %s for %s", request.environ.get('REMOTE_ADDR'),
+        log.error("Unsupported filename in save request from %s for %r", request.environ.get('REMOTE_ADDR'),
                   secured_filename)
         return json_response('Unsupported filename provided', True)
 
@@ -142,8 +142,8 @@ def save(save_hash, save_filename):
         if file.filename == '':
             return json_response('Invalid file was attached', True)
 
-        log.info("Save request from %s for %r to %r", request.environ.get('REMOTE_ADDR'), secured_filename,
-                 secured_save_filepath)
+        log.info("Save request from %s for %r by %s to %r", request.environ.get('REMOTE_ADDR'), secured_filename,
+                 secured_save_hash, secured_save_filepath)
 
         # create directories
         try:
@@ -161,11 +161,11 @@ def save(save_hash, save_filename):
 
     except RequestEntityTooLarge:
         log.error(
-            "Exception with save request from %s for %r with filename %r, the file was too large...",
+            "Exception with save request from %s for %s with filename %r, the file was too large...",
             request.environ.get('REMOTE_ADDR'), secured_save_hash, secured_filename)
         return json_response('File was too large to be saved', True)
     except Exception:
-        log.exception("Unexpected exception with save request from %s for %r with filename %r: ",
+        log.exception("Unexpected exception with save request from %s for %s with filename %r: ",
                       request.environ.get('REMOTE_ADDR'), secured_save_hash, secured_filename)
 
     return json_response('Failed unexpectedly while saving %s' % secured_filename, True)
