@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#  0,4,8,12,16,20 * * * /opt/cloudbox_restore_service/scripts/backup_to_google.sh
 
 if ! /usr/bin/screen -list | /bin/grep -q "backup"; then
         #/bin/rm -rfv /root/backup.log
