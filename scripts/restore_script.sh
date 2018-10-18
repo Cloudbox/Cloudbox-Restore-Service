@@ -1,4 +1,19 @@
 #!/usr/bin/env bash
+#################################################################################
+# Title:         Cloudbox: Cloudbox Vault Restore Script                        #
+# Author(s):     l3uddz                                                         #
+# URL:           https://github.com/Cloudbox/Cloudbox                           #
+# Description:   Restores encrypted config files from Cloudbox Vault Service.   #
+# --                                                                            #
+#             Part of the Cloudbox project: https://cloudbox.works              #
+#################################################################################
+#                     GNU General Public License v3.0                           #
+#################################################################################
+# Usage:                                                                        #
+# ======                                                                        #
+# curl -s https://cloudbox.works/vault.sh | bash -s 'USER' 'PASS' 'PATH'        #
+# wget -qO- https://cloudbox.works/vault.sh | bash -s 'USER' 'PASS' 'PATH'      #
+#################################################################################
 
 # vars
 files=( "ansible.cfg" "accounts.yml" "adv_settings.yml" "settings.yml" "rclone.conf" )
@@ -14,10 +29,15 @@ PASS=$2
 DIR=$3
 
 # validate inputs
-if [ -z "$USER" ] || [ -z "$PASS" ] || [ -z "$DIR" ]
+if [ -z "$USER" ] || [ -z "$PASS" ]
 then
-      echo "You must provide the user, pass & directory as arguments"
+      echo "You must provide the user & pass as arguments"
       exit 1
+fi
+
+if [ -z "$DIR" ]
+then
+    DIR="~/cloudbox"
 fi
 
 # SHA1 username
