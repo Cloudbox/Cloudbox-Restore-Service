@@ -16,7 +16,7 @@
 #################################################################################
 
 # vars
-files=( "ansible.cfg" "accounts.yml" "adv_settings.yml" "settings.yml" "rclone.conf" )
+files=( "ansible.cfg" "accounts.yml" "adv_settings.yml" "settings.yml" "rclone.conf" "backup_config.yml" )
 vault="vault.cloudbox.works"
 green="\e[1;32m"
 red="\e[1;31m"

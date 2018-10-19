@@ -26,7 +26,8 @@ class Config:
                 'accounts.yml',
                 'adv_settings.yml',
                 'rclone.conf',
-                'settings.yml'
+                'settings.yml',
+                'backup_config.yml'
             ],
             'max_file_size_kb': 512,
             'upload_folder': os.path.join(os.path.dirname(sys.argv[0]), 'uploads')
