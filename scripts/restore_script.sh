@@ -53,7 +53,7 @@ then
 fi
 
 # SHA1 username
-USER_HASH=$(echo -n $USER | openssl dgst -sha1 | sed 's/^.*= //')
+USER_HASH=$(echo -n "$USER" | openssl dgst -sha1 | sed 's/^.*= //')
 echo "User Hash: $USER_HASH"
 echo ''
 
@@ -87,7 +87,7 @@ do
         :
         # wget file
         printf '%-20.20s' "$file"
-        DECRYPT_RESULT=$(openssl enc -aes-256-cbc -d -salt -in $folder/$file.enc -out $folder/$file -k $PASS 2>&1)
+        DECRYPT_RESULT=$(openssl enc -aes-256-cbc -d -salt -in $folder/$file.enc -out $folder/$file -k "$PASS" 2>&1)
         # was the file decryption successful?
         if [ -z "$DECRYPT_RESULT" ]
         then
