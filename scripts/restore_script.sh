@@ -1,24 +1,29 @@
 #!/usr/bin/env bash
-#################################################################################
-# Title:         Cloudbox: Cloudbox Vault Restore Script                        #
-# Author(s):     l3uddz                                                         #
-# URL:           https://github.com/Cloudbox/Cloudbox                           #
-# Description:   Restores encrypted config files from Cloudbox Vault Service.   #
-# --                                                                            #
-#             Part of the Cloudbox project: https://cloudbox.works              #
-#################################################################################
-#                     GNU General Public License v3.0                           #
-#################################################################################
-# Usage:                                                                        #
-# ======                                                                        #
-# curl -s https://cloudbox.works/vault.sh | bash -s 'USER' 'PASS' 'PATH'        #
-# wget -qO- https://cloudbox.works/vault.sh | bash -s 'USER' 'PASS' 'PATH'      #
-#################################################################################
+######################################################################################
+# Title:         Cloudbox Restore Service: Restore Script                            #
+# Author(s):     l3uddz, desimaniac                                                  #
+# URL:           https://github.com/Cloudbox/Cloudbox                                #
+# Description:   Restores encrypted config files from Cloudbox Restore Service.      #
+# --                                                                                 #
+#             Part of the Cloudbox project: https://cloudbox.works                   #
+######################################################################################
+#                     GNU General Public License v3.0                                #
+######################################################################################
+# Usage:                                                                             #
+# ======                                                                             #
+# Simple:                                                                            #
+# curl -s https://cloudbox.works/scripts/restore.sh | bash -s 'USER' 'PASS'          #
+# wget -qO- https://cloudbox.works/scripts/restore.sh | bash -s 'USER' 'PASS'        #
+#                                                                                    #
+# Custom Cloudbox Path:                                                              #
+# curl -s https://cloudbox.works/scripts/restore.sh | bash -s 'USER' 'PASS' 'PATH'   #
+# wget -qO- https://cloudbox.works/scripts/restore.sh | bash -s 'USER' 'PASS' 'PATH' #
+######################################################################################
 
 # vars
 files=( "ansible.cfg" "accounts.yml" "settings.yml" "adv_settings.yml" "backup_config.yml" "rclone.conf" )
-vault="vault.cloudbox.works"
-folder="/tmp/vault"
+restore="restore.cloudbox.works"
+folder="/tmp/restore_service"
 green="\e[1;32m"
 red="\e[1;31m"
 nc="\e[0m"
@@ -26,18 +31,14 @@ done="[ ${green}DONE${nc} ]"
 fail="[ ${red}FAIL${nc} ]"
 
 # Print banner
-if [ -x "$(command -v toilet)" ]; then
-    echo ""
-    toilet 'Cloudbox Vault' -f standard --filter metal --filter border:metal --width 75
-fi
 
 echo -e "
 $green┌─────────────────────────────────────────────────────────────────────┐
-$green│ Title:         Cloudbox Vault                                       │
-$green│ Author(s):     l3uddz                                               │
+$green│ Title:         Cloudbox Restore Service: Restore Script             │
+$green│ Author(s):     l3uddz, desimaniac                                   │
 $green│ URL:           https://github.com/cloudbox/cloudbox                 │
-$green│ Description:   Restores encrypted config files from the Cloudbox    │
-$green│                Vault Service.                                       │
+$green│ Description:   Restores encrypted config files from the             │
+$green│                Cloudbox Restore Service.                            │
 $green├─────────────────────────────────────────────────────────────────────┤
 $green│         Part of the Cloudbox project: https://cloudbox.works        │
 $green├─────────────────────────────────────────────────────────────────────┤
@@ -54,7 +55,7 @@ DIR=${3:-$HOME/cloudbox}
 # validate inputs
 if [ -z "$USER" ] || [ -z "$PASS" ]
 then
-      echo "You must provide the user & pass as arguments"
+      echo "You must provide the USER & PASS as arguments"
       exit 1
 fi
 
@@ -64,7 +65,10 @@ if [ ! -z "$TMP_FOLDER_RESULT" ]
 then
     echo "Failed to ensure $folder was created..."
     exit 1
+else
+   rm -rf $folder/*
 fi
+
 
 RESTORE_FOLDER_RESULT=$(mkdir -p $DIR)
 if [ ! -z "$RESTORE_FOLDER_RESULT" ]
@@ -79,14 +83,14 @@ echo "User Hash: $USER_HASH"
 echo ''
 
 # Fetch files
-echo "Fetching files from $vault..."
+echo "Fetching files from $restore..."
 echo ''
 for file in "${files[@]}"
 do
         :
         # wget file
         printf '%-20.20s' "$file"
-        wget -qO $folder/$file.enc http://$vault/load/$USER_HASH/$file
+        wget -qO $folder/$file.enc http://$restore/load/$USER_HASH/$file
         file_header=$(head -c 10 $folder/$file.enc)
         # is the file encrypted?
         if [[ $file_header == Salted* ]]
@@ -129,7 +133,7 @@ do
         :
         # move file
         printf '%-20.20s' "$file"
-        MOVE_RESULT=$(mv $folder/$file $DIR/$file 2>&1)
+        MOVE_RESULT=$(mv --backup=numbered $folder/$file $DIR/$file 2>&1)
         # was the decrypted file moved successfully?
         if [ -z "$MOVE_RESULT" ]
         then
