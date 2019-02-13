@@ -27,7 +27,8 @@ class Config:
                 'adv_settings.yml',
                 'rclone.conf',
                 'settings.yml',
-                'backup_config.yml'
+                'backup_config.yml',
+                'ansible_vault'
             ],
             'max_file_size_kb': 512,
             'upload_folder': os.path.join(os.path.dirname(sys.argv[0]), 'uploads')
