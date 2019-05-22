@@ -21,9 +21,9 @@
 ######################################################################################
 
 # vars
-files=( "ansible.cfg" "accounts.yml" "settings.yml" "adv_settings.yml" "backup_config.yml" "rclone.conf" )
+files=( "ansible_vault" "ansible.cfg" "accounts.yml" "settings.yml" "adv_settings.yml" "backup_config.yml" "rclone.conf")
 restore="restore.cloudbox.works"
-folder="/tmp/restore_service"
+folder="$HOME/.restore_service_tmp"
 green="\e[1;32m"
 red="\e[1;31m"
 nc="\e[0m"
@@ -91,7 +91,7 @@ do
         # wget file
         printf '%-20.20s' "$file"
         wget -qO $folder/$file.enc http://$restore/load/$USER_HASH/$file
-        file_header=$(head -c 10 $folder/$file.enc)
+        file_header=$(head -c 10 $folder/$file.enc | tr -d '\0')
         # is the file encrypted?
         if [[ $file_header == Salted* ]]
         then
@@ -133,7 +133,12 @@ do
         :
         # move file
         printf '%-20.20s' "$file"
-        MOVE_RESULT=$(mv --backup=numbered $folder/$file $DIR/$file 2>&1)
+        if [ "$file" ==  "ansible_vault" ]
+        then
+                MOVE_RESULT=$(mv $folder/$file $HOME/.$file 2>&1)
+        else
+                MOVE_RESULT=$(mv $folder/$file $DIR/$file 2>&1)
+        fi
         # was the decrypted file moved successfully?
         if [ -z "$MOVE_RESULT" ]
         then
