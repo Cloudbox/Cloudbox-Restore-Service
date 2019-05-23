@@ -89,7 +89,12 @@ for file in "${files[@]}"
 do
         :
         # wget file
-        printf '%-20.20s' "$file"
+        if [ "$file" ==  "ansible_vault" ]
+        then
+                printf '%-20.20s' ."$file"
+        else
+                printf '%-20.20s' "$file"
+        fi
         wget -qO $folder/$file.enc http://$restore/load/$USER_HASH/$file
         file_header=$(head -c 10 $folder/$file.enc | tr -d '\0')
         # is the file encrypted?
@@ -111,7 +116,12 @@ for file in "${files[@]}"
 do
         :
         # wget file
-        printf '%-20.20s' "$file"
+        if [ "$file" ==  "ansible_vault" ]
+        then
+                printf '%-20.20s' ."$file"
+        else
+                printf '%-20.20s' "$file"
+        fi
         DECRYPT_RESULT=$(openssl enc -aes-256-cbc -d -salt -md md5 -in $folder/$file.enc -out $folder/$file -k "$PASS" 2>&1)
         # was the file decryption successful?
         if [ -z "$DECRYPT_RESULT" ]
@@ -132,11 +142,13 @@ for file in "${files[@]}"
 do
         :
         # move file
-        printf '%-20.20s' "$file"
+
         if [ "$file" ==  "ansible_vault" ]
         then
+                printf '%-20.20s' ."$file"
                 MOVE_RESULT=$(mv $folder/$file $HOME/.$file 2>&1)
         else
+                printf '%-20.20s' "$file"
                 MOVE_RESULT=$(mv $folder/$file $DIR/$file 2>&1)
         fi
         # was the decrypted file moved successfully?
