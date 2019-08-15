@@ -95,7 +95,7 @@ def load(load_hash, load_filename):
         if not os.path.exists(secured_load_filepath):
             log.error("Load request from %s for %r by %s did not exist at %r", request.environ.get('REMOTE_ADDR'),
                       secured_filename, secured_load_hash, secured_load_filepath)
-            return json_response('%s was missing' % secured_filename, True)
+            return json_response('%s was missing' % secured_filename, True), 404
 
         log.info("Load request from %s for %r by %s", request.environ.get('REMOTE_ADDR'), secured_filename,
                  secured_load_hash)
