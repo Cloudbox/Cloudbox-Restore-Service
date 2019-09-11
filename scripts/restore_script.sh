@@ -21,7 +21,7 @@
 ######################################################################################
 
 # vars
-files=( "ansible_vault" "ansible.cfg" "accounts.yml" "settings.yml" "adv_settings.yml" "backup_config.yml" "rclone.conf")
+files=( "accounts.yml" "adv_settings.yml" "ansible.cfg" "ansible_vault" "backup_config.yml" "rclone.conf" "settings.yml" )
 restore="restore.cloudbox.works"
 folder="$HOME/.restore_service_tmp"
 green="\e[1;32m"
