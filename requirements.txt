@@ -5,4 +5,4 @@ greenlet==0.4.15
 itsdangerous==0.24
 Jinja2>=2.10.1
 MarkupSafe==1.0
-Werkzeug==0.15.3
+Werkzeug==2.2.3
